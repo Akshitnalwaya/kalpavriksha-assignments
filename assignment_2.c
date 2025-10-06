@@ -39,7 +39,6 @@ int main() {
     return 0;
 }
 
-
 void create_user() {
     struct User u;
     FILE *fp = fopen("users.txt", "a");
