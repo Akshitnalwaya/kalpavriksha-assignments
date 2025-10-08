@@ -1,235 +1,178 @@
 #include <stdio.h>
-#include<stdlib.h>
-#include<ctype.h> 
+#include <stdlib.h>
+#include <ctype.h>
 
-int operand[100];
-char operator[100];
+double operandStack[100];
+char operatorStack[100];
 
-int top_od = -1;
-int top_or = -1;
+int topOperand = -1;
+int topOperator = -1;
 
-void computation();
-int precedence(char val);
-void operand_push(int val);
-void operator_push(char val);
-int operand_pop();
-char operator_pop();
-char operator_top();
-int eval_exp(char *exp, int size);
-int is_valid_exp(char *exp, int size); 
+void performComputation();
+int getPrecedence(char symbol);
+void pushOperand(double value);
+void pushOperator(char symbol);
+double popOperand();
+char popOperator();
+char peekOperator();
+double evaluateExpression(char *expression, int length);
+int isValidExpression(char *expression, int length);
 
 int main()
 {
-    char exp[100];
-    printf("Enter your expression :");
-    fgets(exp, sizeof(exp), stdin);
-    int i = 0;
-    while (exp[i] != '\0')
-    {
-        i++;
-    }
+    char expression[100];
+    printf("Enter your expression: ");
+    fgets(expression, sizeof(expression), stdin);
+    int length = 0;
+    while (expression[length] != '\0')
+        length++;
 
-
-    if (!is_valid_exp(exp, i - 1)) {
+    if (!isValidExpression(expression, length - 1)) {
         printf("Invalid expression syntax\n");
         return 1;
     }
 
-    int result = eval_exp(exp, i - 1);
-    printf("%d", result);
+    double result = evaluateExpression(expression, length - 1);
+    printf("%lf\n", result);
     return 0;
 }
 
-void computation()
+void performComputation()
 {
-    char top_operator = operator_top();
-    int val2 = operand_pop();
-    int val1 = operand_pop();
-    int res = 0;
-    if (top_operator == '+')
-    {
-        res = val1 + val2;
-    }
-    else if (top_operator == '-')
-    {
-        res = val1 - val2;
-    }
-    else if (top_operator == '*')
-    {
-        res = val1 * val2;
-    }
-    else if (top_operator == '/')
-    {
-        if (val2 == 0)
-        {
-            printf("dividing by zero");
+    char currentOperator = peekOperator();
+    double secondOperand = popOperand();
+    double firstOperand = popOperand();
+    double result = 0;
+
+    if (currentOperator == '+') result = firstOperand + secondOperand;
+    else if (currentOperator == '-') result = firstOperand - secondOperand;
+    else if (currentOperator == '*') result = firstOperand * secondOperand;
+    else if (currentOperator == '/') {
+        if (secondOperand == 0) {
+            printf("dividing by zero\n");
             exit(1);
         }
-        res = val1 / val2;
+        result = firstOperand / secondOperand;
     }
-    operator_pop();
-    operand_push(res);
+
+    popOperator();
+    pushOperand(result);
 }
 
-int precedence(char val)
+int getPrecedence(char symbol)
 {
-    if (val == '/' || val == '*')
-        return 2;
-    else if (val == '+' || val == '-')
-        return 1;
-
+    if (symbol == '*' || symbol == '/') return 2;
+    if (symbol == '+' || symbol == '-') return 1;
     return 0;
 }
 
-void operand_push(int val)
+void pushOperand(double value)
 {
-    if (top_od == 100)
-    {
-        printf("operand Stack overflow");
+    if (topOperand == 99) {
+        printf("operand stack overflow\n");
         return;
     }
-    operand[++top_od] = val;
+    operandStack[++topOperand] = value;
 }
 
-void operator_push(char val)
+void pushOperator(char symbol)
 {
-    if (top_or == 100)
-    {
-        printf("operator stack overflow");
+    if (topOperator == 99) {
+        printf("operator stack overflow\n");
         return;
     }
-    operator[++top_or] = val;
+    operatorStack[++topOperator] = symbol;
 }
 
-int operand_pop()
+double popOperand()
 {
-    if (top_od == -1)
-    {
-        printf("operand stack underflow");
+    if (topOperand == -1) {
+        printf("operand stack underflow\n");
         exit(0);
     }
-    return operand[top_od--];
+    return operandStack[topOperand--];
 }
 
-char operator_pop()
+char popOperator()
 {
-    if (top_or == -1)
-    {
-        printf("operator stack underflow");
+    if (topOperator == -1) {
+        printf("operator stack underflow\n");
         exit(0);
     }
-    return operator[top_or--];
+    return operatorStack[topOperator--];
 }
 
-char operator_top()
+char peekOperator()
 {
-    if (top_or == -1)
-        return '0';
-    return operator[top_or];
+    if (topOperator == -1) return '0';
+    return operatorStack[topOperator];
 }
 
-int eval_exp(char *exp, int size)
+double evaluateExpression(char *expression, int length)
 {
-    int i = 0;
-    while (i < size)
+    int index = 0;
+    while (index < length)
     {
-        if (exp[i] == ' ')
+        if (expression[index] == ' ') { index++; continue; }
+
+        if (isdigit(expression[index]))
         {
-            i++;
-            continue;
+            double number = 0;
+            while (index < length && isdigit(expression[index]))
+            {
+                number = number * 10 + (expression[index] - '0');
+                index++;
+            }
+            pushOperand(number);
         }
-        if (exp[i] >= '0' && exp[i] <= '9')
-        {
-            int val = 0;
-            while (exp[i] >= '0' && exp[i] <= '9')
-            {
-                val = val * 10 + (int)(exp[i] - '0');
-                i++;
-            }
-            operand_push(val);
-        }else if(exp[i]=='('){
-            operator_push(exp[i++]);
-        }else if(exp[i]==')'){
-            while(operator_top()!='('){
-                computation();
-            }
-            operator_pop();
-            i++;
+        else if (expression[index] == '(') pushOperator(expression[index++]);
+        else if (expression[index] == ')') {
+            while (peekOperator() != '(') performComputation();
+            popOperator();
+            index++;
         }
-        else if (exp[i] == '*' || exp[i] == '/' || exp[i] == '+' || exp[i] == '-')
+        else if (expression[index] == '+' || expression[index] == '-' || expression[index] == '*' || expression[index] == '/')
         {
-            if (top_or == -1)
-            {
-                operator_push(exp[i++]);
-                continue;
-            }
-            if (precedence(operator_top()) < precedence(exp[i]))
-                operator_push(exp[i++]);
-            else
-            {
-                while (precedence(operator_top()) >= precedence(exp[i]))
-                {
-                    computation();
-                }
-                operator_push(exp[i]);
-                i++;
+            if (topOperator == -1) { pushOperator(expression[index++]); continue; }
+            if (getPrecedence(peekOperator()) < getPrecedence(expression[index])) pushOperator(expression[index++]);
+            else {
+                while (getPrecedence(peekOperator()) >= getPrecedence(expression[index])) performComputation();
+                pushOperator(expression[index++]);
             }
         }
-        else
-        {
-            printf("invalid expression");
+        else {
+            printf("invalid expression\n");
             return 0;
         }
     }
-    while (top_or != -1)
-    {
-        computation();
-    }
-    return operand[top_od];
+    while (topOperator != -1) performComputation();
+    return operandStack[topOperand];
 }
 
+int isValidExpression(char *expression, int length)
+{
+    int index = 0, parenthesesCount = 0;
+    char previousChar = 0;
 
-int is_valid_exp(char *exp, int size) {
-    int i = 0, parentheses = 0;
-    char prev = 0;
+    while (index < length)
+    {
+        char currentChar = expression[index];
+        if (currentChar == ' ') { index++; continue; }
+        if (!(isdigit(currentChar) || currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/' || currentChar == '(' || currentChar == ')')) return 0;
 
-    while (i < size) {
-        char curr = exp[i];
+        if (currentChar == '(') { parenthesesCount++; if (expression[index + 1] == ')') return 0; }
+        else if (currentChar == ')') { parenthesesCount--; if (parenthesesCount < 0) return 0; }
 
-        if (curr == ' ') {
-            i++;
-            continue;
-        }
+        if ((currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/') && 
+            (previousChar == '+' || previousChar == '-' || previousChar == '*' || previousChar == '/')) return 0;
 
-        if (!(isdigit(curr) || curr == '+' || curr == '-' || curr == '*' || curr == '/' || curr == '(' || curr == ')')) {
-            return 0; 
-        }
+        if (index == 0 && (currentChar == '+' || currentChar == '*' || currentChar == '/')) return 0;
+        if (index == length - 1 && (currentChar == '+' || currentChar == '-' || currentChar == '*' || currentChar == '/')) return 0;
 
-        if (curr == '(') {
-            parentheses++;
-            if (exp[i+1] == ')') return 0; 
-        } else if (curr == ')') {
-            parentheses--;
-            if (parentheses < 0) return 0;
-        }
-
-        if ((curr == '+' || curr == '-' || curr == '*' || curr == '/') &&
-            (prev == '+' || prev == '-' || prev == '*' || prev == '/')) {
-            return 0;
-        }
-
-        if (i == 0 && (curr == '+' || curr == '*' || curr == '/')) return 0; 
-        if (i == size - 1 && (curr == '+' || curr == '-' || curr == '*' || curr == '/')) return 0; 
-
-        prev = curr;
-        i++;
+        previousChar = currentChar;
+        index++;
     }
 
-    if (parentheses != 0) return 0; 
-
+    if (parenthesesCount != 0) return 0;
     return 1;
 }
-
-
-
-
