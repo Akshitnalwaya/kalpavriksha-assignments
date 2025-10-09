@@ -15,13 +15,6 @@ void deleteUser();
 int isUserExists(int id);
 
 int main() {
-    FILE *filePointer = fopen("users.txt", "a");
-    if (!filePointer) {
-        printf("Error creating file.\n");
-        return 1;
-    }
-    fclose(filePointer);
-
     int choice;
     while (1) {
         printf("\n-----------------------\n");
