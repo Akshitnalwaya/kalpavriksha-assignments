@@ -1,4 +1,5 @@
 #include <stdio.h>
+#define TOTAL_SUBJECTS 3
 
 typedef struct Student
 {
@@ -9,26 +10,26 @@ typedef struct Student
     int studentMarks3;
 } Student;
 
-void studentDetails(Student *studentPtr, Student students[], int currentIndex);
-void displayOutput(Student student);
-int totalMarks(Student student);
-float averageMarks(Student student);
-char gradingSystem(float avg);
-void performance(float avg);
+void inputStudentDetails(Student *currentStudent, Student students[], int currentIndex);
+void displayStudentDetails(Student student);
+int calculateTotalMarks(Student student);
+float calculateAverageMarks(Student student);
+char gradingSystem(float averageMarks);
+void displayPerformance(float averageMarks);
 void displayRollNumberList(int index, int numberOfStudents, Student students[]);
 
 
-void studentDetails(Student *studentPtr, Student students[], int currentIndex)
+void inputStudentDetails(Student *currentStudent, Student students[], int currentIndex)
 {
     int isDuplicate;
     do
     {
         isDuplicate = 0;
         printf("Enter Roll Number: ");
-        scanf("%d", &studentPtr->rollNumber);
+        scanf("%d", &currentStudent->rollNumber);
         for (int i = 0; i < currentIndex; i++)
         {
-            if (students[i].rollNumber == studentPtr->rollNumber)
+            if (students[i].rollNumber == currentStudent->rollNumber)
             {
                 printf("Roll Number already exists Enter a unique roll number.\n");
                 isDuplicate = 1;
@@ -40,68 +41,68 @@ void studentDetails(Student *studentPtr, Student students[], int currentIndex)
     getchar(); 
 
     printf("Enter Student Name: ");
-    fgets(studentPtr->studentName, sizeof(studentPtr->studentName), stdin);
+    fgets(currentStudent->studentName, sizeof(currentStudent->studentName), stdin);
 
     printf("Enter Student Marks (3 subjects): ");
-    scanf("%d %d %d", &studentPtr->studentMarks1, &studentPtr->studentMarks2, &studentPtr->studentMarks3);
+    scanf("%d %d %d", &currentStudent->studentMarks1, &currentStudent->studentMarks2, &currentStudent->studentMarks3);
 }
 
 
-int totalMarks(Student student)
+int calculateTotalMarks(Student student)
 {
     return student.studentMarks1 + student.studentMarks2 + student.studentMarks3;
 }
 
-float averageMarks(Student student)
+float calculateAverageMarks(Student student)
 {
-    return totalMarks(student) / 3.0;
+    return calculateTotalMarks(student)/(float)TOTAL_SUBJECTS;
 }
 
-char gradingSystem(float avg)
+char gradingSystem(float averageMarks)
 {
-    if (avg >= 85)
+    if (averageMarks >= 85)
         return 'A';
-    else if (avg >= 70)
+    else if (averageMarks >= 70)
         return 'B';
-    else if (avg >= 50)
+    else if (averageMarks >= 50)
         return 'C';
-    else if (avg >= 35)
+    else if (averageMarks >= 35)
         return 'D';
     else
         return 'F';
 }
 
-void performance(float avg)
+void displayPerformance(float averageMarks)
 {
-   if (avg < 35)
+    if (averageMarks < 35)
     {
         return;
     }
 
     printf("Performance: ");
-    if (avg >= 85)
+    if (averageMarks >= 85)
         printf("*****\n");
-    else if (avg >= 70)
+    else if (averageMarks >= 70)
         printf("****\n");
-    else if (avg >= 50)
+    else if (averageMarks >= 50)
         printf("***\n");
-    else if (avg >= 35)
+    else if (averageMarks >= 35)
         printf("**\n");
 }
 
-void displayOutput(Student student)
+void displayStudentDetails(Student student)
 {
-    float avg = averageMarks(student);
-    int total = totalMarks(student);
-    char grade = gradingSystem(avg);
+    float averageMarks = calculateAverageMarks(student);
+    int total = calculateTotalMarks(student);
+    char grade = gradingSystem(averageMarks);
 
     printf("\n--------------\n");
     printf("Roll: %d\n", student.rollNumber);
     printf("Name: %s", student.studentName);
     printf("Total: %d\n", total);
-    printf("Average: %.2f\n", avg);
+    printf("Average: %.2f\n", averageMarks);
     printf("Grade: %c\n", grade);
-    performance(avg);
+    displayPerformance(averageMarks);
 }
 
 
@@ -132,13 +133,13 @@ int main()
     for (int i = 0; i < numberOfStudents; i++)
     {
         printf("\nEnter details for Student %d \n", i + 1);
-        studentDetails(&students[i], students, i); 
+        inputStudentDetails(&students[i], students, i); 
     }
 
     printf("\nStudent Information \n");
     for (int i = 0; i < numberOfStudents; i++)
     {
-        displayOutput(students[i]);
+        displayStudentDetails(students[i]);
     }
 
 
