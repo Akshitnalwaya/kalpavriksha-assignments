@@ -44,7 +44,6 @@ void studentDetails(Student *studentPtr, Student students[], int currentIndex)
 
     printf("Enter Student Marks (3 subjects): ");
     scanf("%d %d %d", &studentPtr->studentMarks1, &studentPtr->studentMarks2, &studentPtr->studentMarks3);
-    // Didn't use a loop as to reduce complexity
 }
 
 
@@ -74,9 +73,8 @@ char gradingSystem(float avg)
 
 void performance(float avg)
 {
-    if (avg < 35)
+   if (avg < 35)
     {
-        printf("Average below 35\n");
         return;
     }
 
