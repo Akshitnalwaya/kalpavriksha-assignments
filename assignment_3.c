@@ -1,5 +1,10 @@
 #include <stdio.h>
 #define TOTAL_SUBJECTS 3
+#define GRADE_A 85
+#define GRADE_B 70
+#define GRADE_C 50
+#define GRADE_D 35
+#define GRADE_F 30
 
 typedef struct Student
 {
@@ -43,8 +48,22 @@ void inputStudentDetails(Student *currentStudent, Student students[], int curren
     printf("Enter Student Name: ");
     fgets(currentStudent->studentName, sizeof(currentStudent->studentName), stdin);
 
-    printf("Enter Student Marks (3 subjects): ");
-    scanf("%d %d %d", &currentStudent->studentMarks1, &currentStudent->studentMarks2, &currentStudent->studentMarks3);
+    do {
+        printf("Enter Student Marks 3 subjects: ");
+        scanf("%d %d %d", &currentStudent->studentMarks1, &currentStudent->studentMarks2, &currentStudent->studentMarks3);
+        if (
+            currentStudent->studentMarks1 < 0 || currentStudent->studentMarks1 > 100 ||
+            currentStudent->studentMarks2 < 0 || currentStudent->studentMarks2 > 100 ||
+            currentStudent->studentMarks3 < 0 || currentStudent->studentMarks3 > 100
+        ) {
+            printf("Invalid marks entered. Marks should be between 0 and 100.\n");
+        }
+    } while (
+        currentStudent->studentMarks1 < 0 || currentStudent->studentMarks1 > 100 ||
+        currentStudent->studentMarks2 < 0 || currentStudent->studentMarks2 > 100 ||
+        currentStudent->studentMarks3 < 0 || currentStudent->studentMarks3 > 100
+    );
+
 }
 
 
@@ -60,13 +79,13 @@ float calculateAverageMarks(Student student)
 
 char gradingSystem(float averageMarks)
 {
-    if (averageMarks >= 85)
+  if (averageMarks >= GRADE_A)
         return 'A';
-    else if (averageMarks >= 70)
+    else if (averageMarks >= GRADE_B)
         return 'B';
-    else if (averageMarks >= 50)
+    else if (averageMarks >= GRADE_C)
         return 'C';
-    else if (averageMarks >= 35)
+    else if (averageMarks >= GRADE_D)
         return 'D';
     else
         return 'F';
@@ -74,19 +93,19 @@ char gradingSystem(float averageMarks)
 
 void displayPerformance(float averageMarks)
 {
-    if (averageMarks < 35)
+    if (averageMarks < GRADE_F)
     {
         return;
     }
 
     printf("Performance: ");
-    if (averageMarks >= 85)
+    if (averageMarks >= GRADE_A)
         printf("*****\n");
-    else if (averageMarks >= 70)
+    else if (averageMarks >= GRADE_B)
         printf("****\n");
-    else if (averageMarks >= 50)
+    else if (averageMarks >= GRADE_C)
         printf("***\n");
-    else if (averageMarks >= 35)
+    else if (averageMarks >= GRADE_D)
         printf("**\n");
 }
 
