@@ -4,7 +4,7 @@
 #define GRADE_B 70
 #define GRADE_C 50
 #define GRADE_D 35
-#define GRADE_F 30
+#define GRADE_F 35
 
 typedef struct Student
 {
@@ -22,6 +22,7 @@ float calculateAverageMarks(Student student);
 char gradingSystem(float averageMarks);
 void displayPerformance(float averageMarks);
 void displayRollNumberList(int index, int numberOfStudents, Student students[]);
+int isValidMarks(int m1, int m2, int m3);
 
 
 void inputStudentDetails(Student *currentStudent, Student students[], int currentIndex)
@@ -48,22 +49,24 @@ void inputStudentDetails(Student *currentStudent, Student students[], int curren
     printf("Enter Student Name: ");
     fgets(currentStudent->studentName, sizeof(currentStudent->studentName), stdin);
 
-    do {
-        printf("Enter Student Marks 3 subjects: ");
+ do
+    {
+        printf("Enter marks for 3 subjects (0-100): ");
         scanf("%d %d %d", &currentStudent->studentMarks1, &currentStudent->studentMarks2, &currentStudent->studentMarks3);
-        if (
-            currentStudent->studentMarks1 < 0 || currentStudent->studentMarks1 > 100 ||
-            currentStudent->studentMarks2 < 0 || currentStudent->studentMarks2 > 100 ||
-            currentStudent->studentMarks3 < 0 || currentStudent->studentMarks3 > 100
-        ) {
+
+        if (!isValidMarks(currentStudent->studentMarks1, currentStudent->studentMarks2, currentStudent->studentMarks3))
+        {
             printf("Invalid marks entered. Marks should be between 0 and 100.\n");
         }
-    } while (
-        currentStudent->studentMarks1 < 0 || currentStudent->studentMarks1 > 100 ||
-        currentStudent->studentMarks2 < 0 || currentStudent->studentMarks2 > 100 ||
-        currentStudent->studentMarks3 < 0 || currentStudent->studentMarks3 > 100
-    );
+    } while (!isValidMarks(currentStudent->studentMarks1, currentStudent->studentMarks2, currentStudent->studentMarks3));
 
+}
+
+int isValidMarks(int m1, int m2, int m3)
+{
+    return (m1 >= 0 && m1 <= 100) &&
+           (m2 >= 0 && m2 <= 100) &&
+           (m3 >= 0 && m3 <= 100);
 }
 
 
@@ -141,7 +144,7 @@ int main()
     printf("Enter number of students: ");
     scanf("%d", &numberOfStudents);
 
-    if (numberOfStudents < 1)
+    if (numberOfStudents < 1 || numberOfStudents > 100)
     {
         printf("Invalid number of students\n");
         return 1;
