@@ -81,16 +81,21 @@ float calculateAverageMarks(Student student)
 
 char calculateGrade(float averageMarks)
 {
-    if (averageMarks >= GRADE_A)
+    if (averageMarks >= GRADE_A){
         return 'A';
-    else if (averageMarks >= GRADE_B)
+    }
+    else if (averageMarks >= GRADE_B){
         return 'B';
-    else if (averageMarks >= GRADE_C)
+    }
+    else if (averageMarks >= GRADE_C){
         return 'C';
-    else if (averageMarks >= GRADE_D)
+    }
+    else if (averageMarks >= GRADE_D){
         return 'D';
-    else
+    }
+    else{
         return 'F';
+    }
 }
 
 void displayPerformance(char grade)
@@ -131,8 +136,9 @@ void displayStudentDetails(Student student)
 
 void displayRollNumberList(int index, int numberOfStudents, Student students[])
 {
-    if (index >= numberOfStudents)
+    if (index >= numberOfStudents){
         return;
+    }
 
     printf("%d ", students[index].rollNumber);
     displayRollNumberList(index + 1, numberOfStudents, students);
@@ -164,8 +170,8 @@ int main()
     {
         displayStudentDetails(students[i]);
 
-        float avg = calculateAverageMarks(students[i]);
-        char grade = calculateGrade(avg);
+        float average = calculateAverageMarks(students[i]);
+        char grade = calculateGrade(average);
 
         if (grade == 'F')
         {
