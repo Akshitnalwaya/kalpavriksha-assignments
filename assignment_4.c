@@ -5,6 +5,7 @@
 
 #define MIN_MATRIX_SIZE 2
 #define MAX_MATRIX_SIZE 10
+#define MAX_PIXEL_INTENSITY 256
 
 void swapValues(unsigned short int*, unsigned short int*);
 void generateRandomMatrix(unsigned short int**, int);
@@ -74,7 +75,7 @@ void generateRandomMatrix(unsigned short int **pixelMatrix, int matrixSize) {
 
     for (int rowIndex = 0; rowIndex < matrixSize; rowIndex++) {
         for (int colIndex = 0; colIndex < matrixSize; colIndex++) {
-            *(*(pixelMatrix + rowIndex) + colIndex) = rand() % 256;
+            *(*(pixelMatrix + rowIndex) + colIndex) = rand() % MAX_PIXEL_INTENSITY;
         }
     }
 }
