@@ -10,6 +10,8 @@
 void swapValues(unsigned short int*, unsigned short int*);
 void generateRandomMatrix(unsigned short int**, int);
 void printMatrix(unsigned short int**, int);
+void transposeMatrix(unsigned short int**, int);
+void reverseRows(unsigned short int**, int);
 void rotateMatrixClockwise(unsigned short int**, int);
 void applySmoothingFilter(unsigned short int**, int);
 void shiftMatrixLeft(unsigned short int**, int);
@@ -89,7 +91,7 @@ void printMatrix(unsigned short int **pixelMatrix, int matrixSize) {
     }
 }
 
-void rotateMatrixClockwise(unsigned short int **pixelMatrix, int matrixSize) {
+void transposeMatrix(unsigned short int **pixelMatrix, int matrixSize) {
     for (int rowIndex = 0; rowIndex < matrixSize; rowIndex++) {
         for (int colIndex = rowIndex + 1; colIndex < matrixSize; colIndex++) {
             unsigned short int *firstElement = *(pixelMatrix + rowIndex) + colIndex;
@@ -97,7 +99,9 @@ void rotateMatrixClockwise(unsigned short int **pixelMatrix, int matrixSize) {
             swapValues(firstElement, secondElement);
         }
     }
+}
 
+void reverseRows(unsigned short int **pixelMatrix, int matrixSize) {
     for (int rowIndex = 0; rowIndex < matrixSize; rowIndex++) {
         unsigned short int *leftPointer = *(pixelMatrix + rowIndex);
         unsigned short int *rightPointer = *(pixelMatrix + rowIndex) + matrixSize - 1;
@@ -108,6 +112,12 @@ void rotateMatrixClockwise(unsigned short int **pixelMatrix, int matrixSize) {
         }
     }
 }
+
+void rotateMatrixClockwise(unsigned short int **pixelMatrix, int matrixSize) {
+    transposeMatrix(pixelMatrix, matrixSize);
+    reverseRows(pixelMatrix, matrixSize);
+}
+
 
 void shiftMatrixLeft(unsigned short int **pixelMatrix, int matrixSize) {
     for (int rowIndex = 0; rowIndex < matrixSize; rowIndex++) {
