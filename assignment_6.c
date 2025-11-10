@@ -30,6 +30,9 @@ FreeNode *gFreeNodeTail = NULL;
 char virtualDisk[MAX_BLOCK][BLOCK_SIZE];
 
 int compareString(const char *string1, const char *string2);
+char *tokens(char *inputString, const char *delimiters);
+int containsChar(const char *str, char ch);
+char *copyingString(char *destination, const char *source);
 FreeNode *createFreeNode(int index);
 FreeNode *createFreeNodeList();
 FileNode *createFileNode(int type, FileNode *parent, char *name);
@@ -66,8 +69,8 @@ int main()
         scanf("%[^\n]", terminalInput);
         getchar();
 
-        char *command = strtok(terminalInput, " ");
-        char *name = strtok(NULL, " ");
+        char *command = tokens(terminalInput, " ");
+        char *name = tokens(NULL, " ");
 
         if (compareString(command, "exit") == 0)
         {
@@ -124,7 +127,7 @@ int main()
         }
         else if (compareString(command, "write") == 0)
         {
-            char *fileContent = strtok(NULL, "\n");
+            char *fileContent = tokens(NULL, "\n");
             writeCommand(PWD, name, fileContent);
         }
         else if (compareString(command, "read") == 0)
@@ -146,6 +149,70 @@ int main()
     }
 }
 
+char *copyingString(char *destination, const char *source) {
+    char *temp = destination;
+
+    while (*source != '\0') {
+        *destination = *source;
+        destination++;
+        source++;
+    }
+
+    *destination = '\0';
+
+    return temp;
+}
+
+char *tokens(char *inputString, const char *delimiters) {
+    static char *nextToken = NULL;
+    char *start = NULL;
+
+    if (inputString != NULL) {
+        nextToken = inputString;
+    }
+
+    if (nextToken == NULL) {
+        return NULL;
+    }
+
+    while (*nextToken != '\0' && containsChar(delimiters, *nextToken)) {
+        nextToken++;
+    }
+
+    if (*nextToken == '\0') {
+        nextToken = NULL;
+        return NULL;
+    }
+
+
+    start = nextToken;
+
+
+    while (*nextToken != '\0' && !containsChar(delimiters, *nextToken)) {
+        nextToken++;
+    }
+
+    if (*nextToken != '\0') {
+        *nextToken = '\0';
+        nextToken++;
+    } else {
+        nextToken = NULL;
+    }
+
+    return start;
+}
+
+int containsChar(const char *str, char ch) {
+    while (*str != '\0') {
+        if (*str == ch) {
+            return 1;
+        }
+        str++;
+    }
+    return 0;
+}
+
+
 int compareString(const char *string1, const char *string2) {
     while (*string1 && (*string1 == *string2)) {
         string1++;
@@ -163,7 +230,7 @@ FileNode *createFileNode(int type, FileNode *parent, char *name)
         free(temp);
         exit(1);
     }
-    strcpy(temp->name, name);
+    copyingString(temp->name, name);
     temp->type = type;
     temp->parent = parent;
     temp->child = NULL;
