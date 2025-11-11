@@ -29,10 +29,6 @@ FreeNode *gFreeNodeHead = NULL;
 FreeNode *gFreeNodeTail = NULL;
 char virtualDisk[MAX_BLOCK][BLOCK_SIZE];
 
-int compareString(const char *string1, const char *string2);
-char *tokens(char *inputString, const char *delimiters);
-int containsChar(const char *str, char ch);
-char *copyingString(char *destination, const char *source);
 FreeNode *createFreeNode(int index);
 FreeNode *createFreeNodeList();
 FileNode *createFileNode(int type, FileNode *parent, char *name);
@@ -67,12 +63,12 @@ int main()
     {
         printf("%s>", PWD->name);
         scanf("%[^\n]", terminalInput);
-        getchar();
+        getchar(); 
 
-        char *command = tokens(terminalInput, " ");
-        char *name = tokens(NULL, " ");
+        char *command = strtok(terminalInput, " ");
+        char *name = strtok(NULL, " ");
 
-        if (compareString(command, "exit") == 0)
+        if (strcmp(command, "exit") == 0)
         {
             printf("Memory released. Exiting program...\n");
             freeAllMemory(root);
@@ -80,65 +76,69 @@ int main()
             free(root);
             exit(0);
         }
-        else if (compareString(command, "mkdir") == 0)
+        else if (strcmp(command, "mkdir") == 0)
         {
             if (name == NULL)
             {
                 printf("Please Enter a valid directory name.\n");
             }
-            else
+            else{
                 mkdirCommand(PWD, name);
+            }
         }
-        else if (compareString(command, "ls") == 0)
+        else if (strcmp(command, "ls") == 0)
         {
             lsCommand(PWD->child);
         }
-        else if (compareString(command, "cd") == 0)
+        else if (strcmp(command, "cd") == 0)
         {
-            if (compareString(name, "..") == 0)
+            if (strcmp(name, "..") == 0)
             {
                 if (PWD == root)
                 {
                     printf("No parent Directory , you are in root.\n");
                 }
-                else
+                else{
                     PWD = PWD->parent;
+                }
             }
             else
             {
                 cdCommand(&PWD, name);
             }
         }
-        else if (compareString(command, "rmdir") == 0)
+        else if (strcmp(command, "rmdir") == 0)
         {
             rmdirCommand(PWD, name);
         }
-        else if (compareString(command, "create") == 0)
+        else if (strcmp(command, "create") == 0)
         {
-            if (name == NULL)
+            if (name == NULL){
                 printf("Please enter a valid file name.\n");
-            else
+            }
+            else{
                 createCommand(PWD, name);
+            }
         }
-        else if (compareString(command, "pwd") == 0)
+        else if (strcmp(command, "pwd") == 0)
         {
             pwdCommand(PWD, root);
             printf("\n");
         }
-        else if (compareString(command, "write") == 0)
+        else if (strcmp(command, "write") == 0)
         {
-            char *fileContent = tokens(NULL, "\n");
+            char *fileContent = strtok(NULL, "\n");
             writeCommand(PWD, name, fileContent);
         }
-        else if (compareString(command, "read") == 0)
+        else if (strcmp(command, "read") == 0)
         {
             readCommand(PWD, name);
         }
-        else if (compareString(command, "df") == 0)
+        else if (strcmp(command, "df") == 0)
         {
             dfCommand();
         }
-        else if (compareString(command, "delete") == 0)
+        else if (strcmp(command, "delete") == 0)
         {
             deleteCommand(PWD, name);
         }
@@ -147,78 +147,6 @@ int main()
             printf("Enter a valid command.\n");
         }
     }
-}
-
-char *copyingString(char *destination, const char *source) {
-    char *temp = destination;
-
-    while (*source != '\0') {
-        *destination = *source;
-        destination++;
-        source++;
-    }
-
-    *destination = '\0';
-
-    return temp;
-}
-
-char *tokens(char *inputString, const char *delimiters) {
-    static char *nextToken = NULL;
-    char *start = NULL;
-
-    if (inputString != NULL) {
-        nextToken = inputString;
-    }
-
-    if (nextToken == NULL) {
-        return NULL;
-    }
-
-    while (*nextToken != '\0' && containsChar(delimiters, *nextToken)) {
-        nextToken++;
-    }
-
-    if (*nextToken == '\0') {
-        nextToken = NULL;
-        return NULL;
-    }
-
-
-    start = nextToken;
-
-
-    while (*nextToken != '\0' && !containsChar(delimiters, *nextToken)) {
-        nextToken++;
-    }
-
-    if (*nextToken != '\0') {
-        *nextToken = '\0';
-        nextToken++;
-    } else {
-        nextToken = NULL;
-    }
-
-    return start;
-}
-
-int containsChar(const char *str, char ch) {
-    while (*str != '\0') {
-        if (*str == ch) {
-            return 1;
-        }
-        str++;
-    }
-    return 0;
-}
-
-
-int compareString(const char *string1, const char *string2) {
-    while (*string1 && (*string1 == *string2)) {
-        string1++;
-        string2++;
-    }
-    return (unsigned char)*string1 - (unsigned char)*string2;
 }
 
 FileNode *createFileNode(int type, FileNode *parent, char *name)
@@ -230,7 +158,7 @@ FileNode *createFileNode(int type, FileNode *parent, char *name)
         free(temp);
         exit(1);
     }
-    copyingString(temp->name, name);
+    strcpy(temp->name, name);
     temp->type = type;
     temp->parent = parent;
     temp->child = NULL;
@@ -291,8 +219,9 @@ FileNode *isPresent(FileNode *tail, char *name)
     FileNode *temp = tail;
     do
     {
-        if (compareString(temp->name, name) == 0)
+        if (strcmp(temp->name, name) == 0){
             return temp;
+        }
         temp = temp->nextSibling;
     } while (temp != tail);
     return NULL;
@@ -309,7 +238,7 @@ void cdCommand(FileNode **PWD, char *name)
     FileNode *temp = (*PWD)->child;
     do
     {
-        if (compareString(temp->name, name) == 0)
+        if (strcmp(temp->name, name) == 0)
         {
             if (temp->type == 1)
             {
@@ -329,7 +258,6 @@ FileNode *deleteFileNode(FileNode *tail, FileNode *target)
 {
 
     FileNode *temp = tail;
-
     do
     {
         if (temp->nextSibling == target)
@@ -391,11 +319,13 @@ void createCommand(FileNode *PWD, char *name)
 
 void pwdCommand(FileNode *PWD, FileNode *root)
 {
-    if (PWD == root)
+    if (PWD == root){
+        printf("/");
         return;
+    }
 
     pwdCommand(PWD->parent, root);
-    printf("/%s", PWD->name);
+    printf("%s/", PWD->name);
 }
 
 FreeNode *createFreeNode(int index)
@@ -446,8 +376,9 @@ void writeCommand(FileNode *PWD, char *name, char *fileContent)
     else
     {
         int sizeOfContent = 0;
-        while (fileContent[sizeOfContent] != '\0')
+        while (fileContent[sizeOfContent] != '\0'){
             sizeOfContent++;
+        }
 
         int BlockNeeded = ceil((double)sizeOfContent / BLOCK_SIZE);
 
@@ -506,10 +437,13 @@ void dfCommand()
 int allocateMemory()
 {
     int index = gFreeNodeHead->index;
+    FreeNode* toDelete = gFreeNodeHead;
     gFreeNodeHead = gFreeNodeHead->next;
+    free(toDelete);
     gNumberOfFreeNodes--;
-    if (gFreeNodeHead != NULL)
+    if (gFreeNodeHead != NULL){
         gFreeNodeHead->prev = NULL;
+    }
 
     return index;
 }
@@ -545,11 +479,13 @@ void deallocateMemory(int index)
 
 void freeAllMemory(FileNode *root)
 {
+    /*Base constion*/
     if (root == NULL || root->child == NULL)
         return;
+
     FileNode *temp = root->child;
     do
-    {
+    {   
         if (temp->child != NULL)
         {
             freeAllMemory(temp);
@@ -566,8 +502,9 @@ void freeDoublyLinkedList()
     {
         FreeNode *toDelete = gFreeNodeHead;
         gFreeNodeHead = gFreeNodeHead->next;
-        if (gFreeNodeHead != NULL)
+        if (gFreeNodeHead != NULL){
             gFreeNodeHead->prev = NULL;
+        }
         free(toDelete);
     }
 }
