@@ -24,34 +24,41 @@ typedef struct FileNode
     int blockPointer[512];
 } FileNode;
 
-int gNumberOfFreeNodes = MAX_BLOCK;
-FreeNode *gFreeNodeHead = NULL;
-FreeNode *gFreeNodeTail = NULL;
-char virtualDisk[MAX_BLOCK][BLOCK_SIZE];
+typedef struct VFS {
+    int freeBlockCount;
+    FreeNode *freeListHead;
+    FreeNode *freeListTail;
+    char disk[MAX_BLOCK][BLOCK_SIZE];
+} VFS;
 
 FreeNode *createFreeNode(int index);
-FreeNode *createFreeNodeList();
+FreeNode *createFreeNodeList(VFS *vfs);
 FileNode *createFileNode(int type, FileNode *parent, char *name);
 void addChild(FileNode *parent, FileNode *newNode);
 void lsCommand(FileNode *tail);
-void mkdirCommand(FileNode *PWD, char *name);
+void mkdirCommand(VFS *vfs, FileNode *PWD, char *name);
 FileNode *isPresent(FileNode *tail, char *name);
 void cdCommand(FileNode **PWD, char *name);
-void rmdirCommand(FileNode *PWD, char *name);
-void createCommand(FileNode *PWD, char *name);
-void readCommand(FileNode *PWD, char *name);
+void rmdirCommand(VFS *vfs, FileNode *PWD, char *name);
+void createCommand(VFS *vfs, FileNode *PWD, char *name);
+void readCommand(VFS *vfs, FileNode *PWD, char *name);
 void pwdCommand(FileNode *PWD, FileNode *root);
-void dfCommand();
-void deleteCommand(FileNode *PWD, char *name);
-int allocateMemory();
-void deallocateMemory(int index);
-void writeCommand(FileNode *PWD, char *name, char *fileContent);
+void dfCommand(VFS *vfs);
+void deleteCommand(VFS *vfs, FileNode *PWD, char *name);
+int allocateMemory(VFS *vfs);
+void deallocateMemory(VFS *vfs, int index);
+void writeCommand(VFS *vfs, FileNode *PWD, char *name, char *fileContent);
 void freeAllMemory(FileNode *root);
-void freeDoublyLinkedList();
+void freeDoublyLinkedList(VFS *vfs);
 
 int main()
 {
-    gFreeNodeHead = createFreeNodeList();
+    VFS vfs;
+    vfs.freeBlockCount = MAX_BLOCK;
+    vfs.freeListHead = NULL;
+    vfs.freeListTail = NULL;
+
+    vfs.freeListHead = createFreeNodeList(&vfs);
 
     FileNode *root = createFileNode(0, NULL, "/");
     FileNode *PWD = root;
@@ -63,7 +70,7 @@ int main()
     {
         printf("%s>", PWD->name);
         scanf("%[^\n]", terminalInput);
-        getchar(); 
+        getchar();
 
         char *command = strtok(terminalInput, " ");
         char *name = strtok(NULL, " ");
@@ -72,7 +79,7 @@ int main()
         {
             printf("Memory released. Exiting program...\n");
             freeAllMemory(root);
-            freeDoublyLinkedList();
+            freeDoublyLinkedList(&vfs);
             free(root);
             exit(0);
         }
@@ -83,7 +90,7 @@ int main()
                 printf("Please Enter a valid directory name.\n");
             }
             else{
-                mkdirCommand(PWD, name);
+                mkdirCommand(&vfs, PWD, name);
             }
         }
         else if (strcmp(command, "ls") == 0)
@@ -109,7 +116,7 @@ int main()
         }
         else if (strcmp(command, "rmdir") == 0)
         {
-            rmdirCommand(PWD, name);
+            rmdirCommand(&vfs, PWD, name);
         }
         else if (strcmp(command, "create") == 0)
         {
@@ -117,7 +124,7 @@ int main()
                 printf("Please enter a valid file name.\n");
             }
             else{
-                createCommand(PWD, name);
+                createCommand(&vfs, PWD, name);
             }
         }
         else if (strcmp(command, "pwd") == 0)
@@ -128,19 +135,19 @@ int main()
         else if (strcmp(command, "write") == 0)
         {
             char *fileContent = strtok(NULL, "\n");
-            writeCommand(PWD, name, fileContent);
+            writeCommand(&vfs, PWD, name, fileContent);
         }
         else if (strcmp(command, "read") == 0)
         {
-            readCommand(PWD, name);
+            readCommand(&vfs, PWD, name);
         }
         else if (strcmp(command, "df") == 0)
         {
-            dfCommand();
+            dfCommand(&vfs);
         }
         else if (strcmp(command, "delete") == 0)
         {
-            deleteCommand(PWD, name);
+            deleteCommand(&vfs, PWD, name);
         }
         else
         {
@@ -149,15 +156,42 @@ int main()
     }
 }
 
+FreeNode *createFreeNode(int index)
+{
+    FreeNode *temp = (FreeNode *)malloc(sizeof(FreeNode));
+    temp->index = index;
+    temp->next = NULL;
+    temp->prev = NULL;
+    return temp;
+}
+
+FreeNode *createFreeNodeList(VFS *vfs)
+{
+    FreeNode *headFN = NULL;
+    FreeNode *prev = NULL;
+
+    for (int index = 0; index < MAX_BLOCK; index++)
+    {
+        FreeNode *temp = createFreeNode(index);
+        if (headFN == NULL)
+        {
+            headFN = temp;
+            prev = temp;
+        }
+        else
+        {
+            prev->next = temp;
+            temp->prev = prev;
+            prev = prev->next;
+        }
+    }
+    vfs->freeListTail = prev;
+    return headFN;
+}
+
 FileNode *createFileNode(int type, FileNode *parent, char *name)
 {
     FileNode *temp = (FileNode *)malloc(sizeof(FileNode));
-    if (temp == NULL)
-    {
-        printf("Memory allocatio Fail\n");
-        free(temp);
-        exit(1);
-    }
     strcpy(temp->name, name);
     temp->type = type;
     temp->parent = parent;
@@ -197,7 +231,7 @@ void lsCommand(FileNode *tail)
     printf("\n");
 }
 
-void mkdirCommand(FileNode *PWD, char *name)
+void mkdirCommand(VFS *vfs, FileNode *PWD, char *name)
 {
     if (isPresent(PWD->child, name) == NULL)
     {
@@ -256,7 +290,6 @@ void cdCommand(FileNode **PWD, char *name)
 
 FileNode *deleteFileNode(FileNode *tail, FileNode *target)
 {
-
     FileNode *temp = tail;
     do
     {
@@ -280,7 +313,7 @@ FileNode *deleteFileNode(FileNode *tail, FileNode *target)
     return temp;
 }
 
-void rmdirCommand(FileNode *PWD, char *name)
+void rmdirCommand(VFS *vfs, FileNode *PWD, char *name)
 {
     if (PWD->child == NULL)
     {
@@ -303,7 +336,7 @@ void rmdirCommand(FileNode *PWD, char *name)
     printf("Directory %s deleted successfully\n", name);
 }
 
-void createCommand(FileNode *PWD, char *name)
+void createCommand(VFS *vfs, FileNode *PWD, char *name)
 {
     if (isPresent(PWD->child, name) == NULL)
     {
@@ -328,45 +361,7 @@ void pwdCommand(FileNode *PWD, FileNode *root)
     printf("%s/", PWD->name);
 }
 
-FreeNode *createFreeNode(int index)
-{
-    FreeNode *temp = (FreeNode *)malloc(sizeof(FreeNode));
-    if (temp == NULL)
-    {
-        printf("Memory allocation fails.\n");
-        exit(1);
-    }
-    temp->index = index;
-    temp->next = NULL;
-    temp->prev = NULL;
-    return temp;
-}
-
-FreeNode *createFreeNodeList()
-{
-    FreeNode *headFN = NULL;
-    FreeNode *prev = NULL;
-
-    for (int index = 0; index < MAX_BLOCK; index++)
-    {
-        FreeNode *temp = createFreeNode(index);
-        if (headFN == NULL)
-        {
-            headFN = temp;
-            prev = temp;
-        }
-        else
-        {
-            prev->next = temp;
-            temp->prev = prev;
-            prev = prev->next;
-        }
-    }
-    gFreeNodeTail = prev;
-    return headFN;
-}
-
-void writeCommand(FileNode *PWD, char *name, char *fileContent)
+void writeCommand(VFS *vfs, FileNode *PWD, char *name, char *fileContent)
 {
     FileNode *file = isPresent(PWD->child, name);
     if (file == NULL || file->type == 0)
@@ -375,30 +370,26 @@ void writeCommand(FileNode *PWD, char *name, char *fileContent)
     }
     else
     {
-        int sizeOfContent = 0;
-        while (fileContent[sizeOfContent] != '\0'){
-            sizeOfContent++;
-        }
+        int sizeOfContent = strlen(fileContent);
+        int blocksNeeded = ceil((double)sizeOfContent / BLOCK_SIZE);
 
-        int BlockNeeded = ceil((double)sizeOfContent / BLOCK_SIZE);
-
-        if (BlockNeeded > gNumberOfFreeNodes)
+        if (blocksNeeded > vfs->freeBlockCount)
         {
             printf("Insufficient Memory.\n");
             return;
         }
-        file->blockPointerCount = BlockNeeded;
+        file->blockPointerCount = blocksNeeded;
 
-        for (int block = 0; block < BlockNeeded; block++)
+        for (int block = 0; block < blocksNeeded; block++)
         {
-            file->blockPointer[block] = allocateMemory();
+            file->blockPointer[block] = allocateMemory(&vfs[0]);
         }
 
-        for (int block = 0; block < BlockNeeded; block++)
+        for (int block = 0; block < blocksNeeded; block++)
         {
             for (int i = 0; fileContent[i] != '\0' && i < BLOCK_SIZE; i++)
             {
-                virtualDisk[file->blockPointer[block]][i] = fileContent[i];
+                vfs->disk[file->blockPointer[block]][i] = fileContent[i];
             }
         }
 
@@ -406,7 +397,7 @@ void writeCommand(FileNode *PWD, char *name, char *fileContent)
     }
 }
 
-void readCommand(FileNode *PWD, char *name)
+void readCommand(VFS *vfs, FileNode *PWD, char *name)
 {
     FileNode *file = isPresent(PWD->child, name);
     if (file == NULL || file->type == 0)
@@ -417,38 +408,39 @@ void readCommand(FileNode *PWD, char *name)
     {
         for (int block = 0; block < file->blockPointerCount; block++)
         {
-            for (int i = 0; i < BLOCK_SIZE && virtualDisk[file->blockPointer[block]][i] != '\0'; i++)
+            for (int i = 0; i < BLOCK_SIZE && vfs->disk[file->blockPointer[block]][i] != '\0'; i++)
             {
-                printf("%c", virtualDisk[file->blockPointer[block]][i]);
+                printf("%c", vfs->disk[file->blockPointer[block]][i]);
             }
         }
         printf("\n");
     }
 }
 
-void dfCommand()
+void dfCommand(VFS *vfs)
 {
     printf("Total Blocks : %d\n", MAX_BLOCK);
-    printf("Used Blocks : %d\n", MAX_BLOCK - gNumberOfFreeNodes);
-    printf("Free Block : %d\n", gNumberOfFreeNodes);
-    printf("Disk Usage : %.2lf%%\n", ((double)(MAX_BLOCK - gNumberOfFreeNodes) / MAX_BLOCK) * 100);
+    printf("Used Blocks : %d\n", MAX_BLOCK - vfs->freeBlockCount);
+    printf("Free Block : %d\n", vfs->freeBlockCount);
+    printf("Disk Usage : %.2lf%%\n", ((double)(MAX_BLOCK - vfs->freeBlockCount) / MAX_BLOCK) * 100);
 }
 
-int allocateMemory()
+int allocateMemory(VFS *vfs)
 {
-    int index = gFreeNodeHead->index;
-    FreeNode* toDelete = gFreeNodeHead;
-    gFreeNodeHead = gFreeNodeHead->next;
+    int index = vfs->freeListHead->index;
+    FreeNode* toDelete = vfs->freeListHead;
+    vfs->freeListHead = vfs->freeListHead->next;
+
+    if (vfs->freeListHead != NULL)
+        vfs->freeListHead->prev = NULL;
+
     free(toDelete);
-    gNumberOfFreeNodes--;
-    if (gFreeNodeHead != NULL){
-        gFreeNodeHead->prev = NULL;
-    }
+    vfs->freeBlockCount--;
 
     return index;
 }
 
-void deleteCommand(FileNode *PWD, char *name)
+void deleteCommand(VFS *vfs, FileNode *PWD, char *name)
 {
     FileNode *file = isPresent(PWD->child, name);
     if (file == NULL || file->type == 0)
@@ -457,10 +449,9 @@ void deleteCommand(FileNode *PWD, char *name)
     }
     else
     {
-
         for (int block = 0; block < file->blockPointerCount; block++)
         {
-            deallocateMemory(file->blockPointer[block]);
+            deallocateMemory(vfs, file->blockPointer[block]);
         }
 
         PWD->child = deleteFileNode(PWD->child, file);
@@ -468,24 +459,23 @@ void deleteCommand(FileNode *PWD, char *name)
     }
 }
 
-void deallocateMemory(int index)
+void deallocateMemory(VFS *vfs, int index)
 {
     FreeNode *toADD = createFreeNode(index);
-    gFreeNodeTail->next = toADD;
-    toADD->prev = gFreeNodeTail;
-    gFreeNodeTail = gFreeNodeTail->next;
-    gNumberOfFreeNodes++;
+    vfs->freeListTail->next = toADD;
+    toADD->prev = vfs->freeListTail;
+    vfs->freeListTail = vfs->freeListTail->next;
+    vfs->freeBlockCount++;
 }
 
 void freeAllMemory(FileNode *root)
 {
-    /*Base constion*/
     if (root == NULL || root->child == NULL)
         return;
 
     FileNode *temp = root->child;
     do
-    {   
+    {
         if (temp->child != NULL)
         {
             freeAllMemory(temp);
@@ -496,14 +486,14 @@ void freeAllMemory(FileNode *root)
     } while (temp != root->child);
 }
 
-void freeDoublyLinkedList()
+void freeDoublyLinkedList(VFS *vfs)
 {
-    while (gFreeNodeHead != NULL)
+    while (vfs->freeListHead != NULL)
     {
-        FreeNode *toDelete = gFreeNodeHead;
-        gFreeNodeHead = gFreeNodeHead->next;
-        if (gFreeNodeHead != NULL){
-            gFreeNodeHead->prev = NULL;
+        FreeNode *toDelete = vfs->freeListHead;
+        vfs->freeListHead = vfs->freeListHead->next;
+        if (vfs->freeListHead != NULL){
+            vfs->freeListHead->prev = NULL;
         }
         free(toDelete);
     }
